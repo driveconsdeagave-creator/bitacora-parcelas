@@ -211,7 +211,7 @@ toast('📄 PDF descargado','verde');
 function closeM(e){if(!e||e.target===document.getElementById('mOvr'))document.getElementById('mOvr').classList.remove('show')}
 function showTab(n,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('tab-'+n).classList.add('active');if(n==='historial')loadHist()}
 function toast(m,t=''){const e=document.getElementById('toast');e.textContent=m;e.className='toast show '+t;clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),3000)}
-(async()=>{await initDB();document.getElementById('hLogo').src=LOGO;document.getElementById('wLogo').src=LOGO;await loadCatalogos();syncPending();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')})();
+(async()=>{await initDB();document.getElementById('hLogo').src=LOGO;document.getElementById('wLogo').src=LOGO;await loadCatalogos();syncPending();window.addEventListener('online',()=>{syncPending();loadCatalogos()});if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')})();
 </script>
 </body>
 </html>
