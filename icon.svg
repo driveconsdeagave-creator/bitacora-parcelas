@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" ry="64" fill="#1A5C2E"/>
+  <g fill="#FFFFFF">
+    <polygon points="196,278 216,278 78,196"/>
+    <polygon points="220,278 236,278 134,140"/>
+    <polygon points="238,278 252,278 196,90"/>
+    <polygon points="248,278 264,278 256,62"/>
+    <polygon points="260,278 274,278 316,90"/>
+    <polygon points="276,278 292,278 378,140"/>
+    <polygon points="296,278 316,278 434,196"/>
+  </g>
+  <text x="256" y="372" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="74" text-anchor="middle" fill="#FFFFFF" letter-spacing="-2">Bit&#225;cora</text>
+  <text x="256" y="448" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="500" font-size="56" text-anchor="middle" fill="#FFFFFF">Parcelas</text>
+</svg>
