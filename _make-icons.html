@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de iconos PWA</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#222;color:#eee;padding:30px;text-align:center}
+  h1{color:#FFF}
+  .preview{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin:30px 0}
+  .preview > div{background:#444;padding:15px;border-radius:8px}
+  canvas{background:#888;display:block;margin:0 auto 10px}
+  button{background:#1A5C2E;color:#fff;border:0;padding:14px 28px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;margin:6px}
+  button:hover{background:#247638}
+  .ok{color:#7FE07F}
+  .info{background:#2c2c2c;padding:15px;border-radius:6px;text-align:left;max-width:600px;margin:20px auto;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>Generador de iconos PWA</h1>
+<p>Espera a que cargue la previsualización, luego descarga los 2 archivos PNG y reemplázalos en la carpeta del proyecto.</p>
+
+<div class="preview">
+  <div>
+    <canvas id="c192" width="192" height="192"></canvas>
+    <div>icon-192.png (192x192)</div>
+  </div>
+  <div>
+    <canvas id="c512" width="512" height="512" style="width:256px;height:256px"></canvas>
+    <div>icon-512.png (512x512, mostrado a 50%)</div>
+  </div>
+</div>
+
+<button onclick="downloadAll()">Descargar los 2 PNGs</button>
+
+<div class="info">
+  <strong>Instrucciones:</strong>
+  <ol>
+    <li>Espera a que aparezcan las previsualizaciones (verde con el agave blanco y texto "BITACORA PARCELAS").</li>
+    <li>Clic en "Descargar los 2 PNGs". El navegador descargará <code>icon-192.png</code> y <code>icon-512.png</code>.</li>
+    <li>Mueve los 2 archivos a la carpeta <code>App Bitacora Visitas-Modulo2</code>, reemplazando los existentes (Reemplazar / Yes).</li>
+    <li>Avísame para hacer commit y push.</li>
+  </ol>
+</div>
+
+<div id="status"></div>
+
+<script>
+function drawIcon(canvas, size){
+  const ctx = canvas.getContext('2d');
+  // Fondo verde sin esquinas redondeadas (full bleed, iOS y maskable lo recortan)
+  ctx.fillStyle = '#1A5C2E';
+  ctx.fillRect(0, 0, size, size);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      // Pinta el logo original en un canvas auxiliar y conviertelo a blanco
+      const aux = document.createElement('canvas');
+      aux.width = img.width; aux.height = img.height;
+      const actx = aux.getContext('2d');
+      actx.drawImage(img, 0, 0);
+      const data = actx.getImageData(0, 0, img.width, img.height);
+      for (let i = 0; i < data.data.length; i += 4) {
+        if (data.data[i+3] > 0) {
+          data.data[i]   = 255;
+          data.data[i+1] = 255;
+          data.data[i+2] = 255;
+        }
+      }
+      actx.putImageData(data, 0, 0);
+
+      // Pega el logo blanco centrado, dimensionado al ~58% del icono
+      const logoTargetW = size * 0.62;
+      const ratio = img.height / img.width;
+      const logoH = logoTargetW * ratio;
+      const logoX = (size - logoTargetW) / 2;
+      const logoY = size * 0.16;
+      ctx.drawImage(aux, logoX, logoY, logoTargetW, logoH);
+
+      // Texto blanco "BITACORA" y "PARCELAS"
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '900 ' + Math.round(size * 0.115) + 'px "Arial Black", Arial, sans-serif';
+      ctx.fillText('BITACORA', size/2, size * 0.74);
+      ctx.fillText('PARCELAS', size/2, size * 0.87);
+
+      resolve();
+    };
+    img.onerror = reject;
+    img.src = 'Logo_Consolidacion_transparente.png';
+  });
+}
+
+async function init(){
+  await drawIcon(document.getElementById('c192'), 192);
+  await drawIcon(document.getElementById('c512'), 512);
+  document.getElementById('status').innerHTML = '<p class="ok">Previsualizaciones listas. Descarga los PNGs.</p>';
+}
+
+function downloadCanvas(canvas, filename){
+  return new Promise(res => {
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      res();
+    }, 'image/png');
+  });
+}
+
+async function downloadAll(){
+  await downloadCanvas(document.getElementById('c192'), 'icon-192.png');
+  await new Promise(r => setTimeout(r, 400));
+  await downloadCanvas(document.getElementById('c512'), 'icon-512.png');
+  document.getElementById('status').innerHTML = '<p class="ok">Descargas iniciadas. Revisa tu carpeta de Descargas.</p>';
+}
+
+init();
+</script>
+</body>
+</html>
