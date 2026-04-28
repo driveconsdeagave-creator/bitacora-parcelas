@@ -1,5 +1,5 @@
-const CACHE = 'bitacora-v3';
-const URLS = ['./bitacora-parcelas.html', './manifest.json', './icon.svg'];
+const CACHE = 'bitacora-v4';
+const URLS = ['./bitacora-parcelas.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
