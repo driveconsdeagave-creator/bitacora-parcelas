@@ -342,6 +342,11 @@ function getHojaBitacora(ss) {
 // Es el ID que viene en el link de la carpeta: drive.google.com/drive/folders/<ID>
 var CARPETA_BITACORA_ID = '1r7NbQcqYT0I7nBeK0JXNkUwH-wa5ZP7u';
 
+// Ejecutar UNA vez desde el editor (▶ Ejecutar) para autorizar el acceso a Drive
+function autorizarDrive() {
+  Logger.log('Carpeta OK: ' + DriveApp.getFolderById(CARPETA_BITACORA_ID).getName());
+}
+
 function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents);
