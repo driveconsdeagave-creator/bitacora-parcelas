@@ -1,4 +1,4 @@
-const CACHE = 'bitacora-v8';
+const CACHE = 'bitacora-v9';
 // jsPDF se precarga para poder generar el PDF sin señal
 const URLS = ['./bitacora-parcelas.html', './manifest.json', './icon-192.png', './icon-512.png', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCzunEf1FZhJpnSfu5wetHilEeovRSlJfwt2zuB6ZlPRz2IkBDuYNvTwk1p3rV_e_zHw/exec';
