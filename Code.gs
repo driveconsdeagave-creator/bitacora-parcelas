@@ -251,7 +251,7 @@ function saveBitacora(payloadStr) {
   }
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName('Bitacora de Visitas');
+  var sh = getHojaBitacora(ss);
 
   // Fecha y hora
   var fecha = d.fecha ? new Date(d.fecha) : new Date();
@@ -261,7 +261,7 @@ function saveBitacora(payloadStr) {
   // 13 puntos (cal + obs = 26 columnas)
   var pts = d.pts || [];
   var puntosArr = [];
-  for (var k = 0; k < 13; k++) {
+  for (var k = 0; k < 12; k++) {
     var p = pts[k] || {};
     puntosArr.push(p.cal || '');
     puntosArr.push(p.obs || '');
@@ -272,7 +272,7 @@ function saveBitacora(payloadStr) {
 
   // Semaforo
   var gc = parseFloat(d.gc);
-  var semaforo = isNaN(gc) ? '' : (gc >= 8 ? 'BUENO' : (gc >= 5 ? 'REGULAR' : 'DEFICIENTE'));
+  var semaforo = isNaN(gc) ? '' : (gc >= 9 ? 'BUENO' : (gc >= 6 ? 'REGULAR' : 'MALO'));
 
   // Geo
   var lat = d.geo ? d.geo.lat : '';
@@ -311,6 +311,64 @@ function saveBitacora(payloadStr) {
   sh.appendRow(row);
 
   return jsonResponse({ ok: true, msg: 'Registro guardado exitosamente' });
+}
+
+/* ── Pestaña con el formato de semáforo (12 conceptos) ──
+   Se crea sola la primera vez. La pestaña anterior queda como histórico. */
+var HOJA_V2 = 'Bitacora de Visitas v2';
+var CONCEPTOS_V2 = ['Camino Acceso','Falsete','Cartel Ganado','Lienzo','Guarda Raya','Camino Interno',
+  'Basura','Cunetas','Daño por Ganado','Desarrollo Planta','Plagas','Malezas'];
+
+function getHojaBitacora(ss) {
+  var sh = ss.getSheetByName(HOJA_V2);
+  if (sh) return sh;
+  sh = ss.insertSheet(HOJA_V2);
+  var headers = ['Fecha','Hora','Nombre','Rol','Parcela','Rancho','Contrato','Superficie (ha)','Inventario','Año'];
+  CONCEPTOS_V2.forEach(function(c) { headers.push('Sem. ' + c, 'Obs. ' + c); });
+  headers = headers.concat(['% Maleza','Tipo Maleza','Altura Maleza','Calificación Global','Semáforo',
+    'Acciones Correctivas','Latitud','Longitud','Google Maps']);
+  sh.getRange(1, 1, 1, headers.length).setValues([headers])
+    .setFontWeight('bold').setBackground('#1A5C2E').setFontColor('#FFFFFF');
+  sh.setFrozenRows(1);
+  return sh;
+}
+
+/* ================================================================
+   WEB APP — doPost: PDF y fotos a Drive
+   Body (text/plain): { action:'saveDrive', parcela, nombre, pdf:dataURL, fotos:[dataURL] }
+   Guarda en /Bitácoras/[Parcela]/[nombre].pdf y [nombre]_foto01.jpg ...
+   ================================================================ */
+function doPost(e) {
+  try {
+    var d = JSON.parse(e.postData.contents);
+    if (d.action === 'saveDrive') return saveDrive(d);
+    return jsonResponse({ ok: false, error: 'Accion no reconocida' });
+  } catch (err) {
+    return jsonResponse({ ok: false, error: err.message });
+  }
+}
+
+function saveDrive(d) {
+  var raiz = carpeta(DriveApp.getRootFolder(), 'Bitácoras');
+  var dir = carpeta(raiz, String(d.parcela || 'Sin parcela').replace(/[\\\/]/g, '-').trim());
+  var base = d.nombre || ('Visita_' + new Date().getTime());
+  // Si el archivo ya existe (reintento de sync), no se duplica
+  if (d.pdf) guardarArchivo(dir, base + '.pdf', d.pdf, 'application/pdf');
+  (d.fotos || []).forEach(function(f, i) {
+    guardarArchivo(dir, base + '_foto' + (i < 9 ? '0' : '') + (i + 1) + '.jpg', f, 'image/jpeg');
+  });
+  return jsonResponse({ ok: true, carpeta: dir.getUrl() });
+}
+
+function carpeta(padre, nombre) {
+  var it = padre.getFoldersByName(nombre);
+  return it.hasNext() ? it.next() : padre.createFolder(nombre);
+}
+
+function guardarArchivo(dir, nombre, dataUrl, mime) {
+  if (dir.getFilesByName(nombre).hasNext()) return;
+  var bytes = Utilities.base64Decode(String(dataUrl).split(',').pop());
+  dir.createFile(Utilities.newBlob(bytes, mime, nombre));
 }
 
 /* ── Helper ── */
