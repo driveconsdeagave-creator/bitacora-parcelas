@@ -335,9 +335,13 @@ function getHojaBitacora(ss) {
 
 /* ================================================================
    WEB APP — doPost: PDF y fotos a Drive
-   Body (text/plain): { action:'saveDrive', parcela, nombre, pdf:dataURL, fotos:[dataURL] }
-   Guarda en /Bitácoras/[Parcela]/[nombre].pdf y [nombre]_foto01.jpg ...
+   Body (text/plain): { action:'saveDrive', parcela, nombre, fecha, pdf:dataURL, fotos:[dataURL] }
+   Guarda en [CARPETA_BITACORA_ID]/[Parcela]/[Año]/[nombre].pdf y .../[Año]/Fotos/[nombre]_foto01.jpg
    ================================================================ */
+// Carpeta madre: Mi unidad/Consolidación de Agave S.A. de C.V/KPI´s Operativos/Bitacora
+// Es el ID que viene en el link de la carpeta: drive.google.com/drive/folders/<ID>
+var CARPETA_BITACORA_ID = '1r7NbQcqYT0I7nBeK0JXNkUwH-wa5ZP7u';
+
 function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents);
@@ -349,14 +353,20 @@ function doPost(e) {
 }
 
 function saveDrive(d) {
-  var raiz = carpeta(DriveApp.getRootFolder(), 'Bitácoras');
-  var dir = carpeta(raiz, String(d.parcela || 'Sin parcela').replace(/[\\\/]/g, '-').trim());
+  var raiz = DriveApp.getFolderById(CARPETA_BITACORA_ID);
+  var parcela = carpeta(raiz, String(d.parcela || 'Sin parcela').replace(/[\\\/]/g, '-').trim());
+  // Año de la visita (no el de plantacion)
+  var fecha = d.fecha ? new Date(d.fecha) : new Date();
+  var dir = carpeta(parcela, Utilities.formatDate(fecha, 'America/Mexico_City', 'yyyy'));
   var base = d.nombre || ('Visita_' + new Date().getTime());
   // Si el archivo ya existe (reintento de sync), no se duplica
   if (d.pdf) guardarArchivo(dir, base + '.pdf', d.pdf, 'application/pdf');
-  (d.fotos || []).forEach(function(f, i) {
-    guardarArchivo(dir, base + '_foto' + (i < 9 ? '0' : '') + (i + 1) + '.jpg', f, 'image/jpeg');
-  });
+  if ((d.fotos || []).length) {
+    var dirFotos = carpeta(dir, 'Fotos');
+    d.fotos.forEach(function(f, i) {
+      guardarArchivo(dirFotos, base + '_foto' + (i < 9 ? '0' : '') + (i + 1) + '.jpg', f, 'image/jpeg');
+    });
+  }
   return jsonResponse({ ok: true, carpeta: dir.getUrl() });
 }
 

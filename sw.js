@@ -1,4 +1,4 @@
-const CACHE = 'bitacora-v7';
+const CACHE = 'bitacora-v8';
 // jsPDF se precarga para poder generar el PDF sin señal
 const URLS = ['./bitacora-parcelas.html', './manifest.json', './icon-192.png', './icon-512.png', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCzunEf1FZhJpnSfu5wetHilEeovRSlJfwt2zuB6ZlPRz2IkBDuYNvTwk1p3rV_e_zHw/exec';
@@ -120,7 +120,7 @@ function enviarDrive(v) {
   return fetch(SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'saveDrive', parcela: (v.rancho || '') + ' ' + (v.contrato || ''), nombre: v.pdfn, pdf: v.pdf, fotos: (v.fotos || []).map(function(f) { return f.d; }) })
+    body: JSON.stringify({ action: 'saveDrive', fecha: v.fecha, parcela: (v.rancho || '') + ' ' + (v.contrato || ''), nombre: v.pdfn, pdf: v.pdf, fotos: (v.fotos || []).map(function(f) { return f.d; }) })
   }).then(function(r) { return r.json(); })
     .then(function(j) { return !!j.ok; })
     .catch(function() { return false; });
