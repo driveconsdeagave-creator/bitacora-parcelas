@@ -349,7 +349,10 @@ var CARPETA_BITACORA_ID = '1r7NbQcqYT0I7nBeK0JXNkUwH-wa5ZP7u';
 
 // Ejecutar UNA vez desde el editor (▶ Ejecutar) para autorizar el acceso a Drive
 function autorizarDrive() {
-  Logger.log('Carpeta OK: ' + DriveApp.getFolderById(CARPETA_BITACORA_ID).getName());
+  var raiz = DriveApp.getFolderById(CARPETA_BITACORA_ID);
+  // Prueba de escritura: crea y manda a la papelera una carpeta temporal
+  raiz.createFolder('_prueba_permiso').setTrashed(true);
+  Logger.log('Carpeta OK (lectura y escritura): ' + raiz.getName());
 }
 
 function doPost(e) {
