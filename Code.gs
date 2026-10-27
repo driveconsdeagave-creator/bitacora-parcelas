@@ -17,6 +17,11 @@
    ================================================================ */
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  // Proteccion: setup reescribe los catalogos con la lista original. Solo corre en un Sheet nuevo.
+  if (ss.getSheetByName('Catalogo Colaboradores')) {
+    Logger.log('setup NO se ejecutó: el Sheet ya está configurado (protege los catálogos editados).');
+    return;
+  }
 
   // ── 1. Bitacora de Visitas ──
   var shB = ss.getSheetByName('Bitacora de Visitas') || ss.insertSheet('Bitacora de Visitas');
