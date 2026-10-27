@@ -1,4 +1,4 @@
-const CACHE = 'bitacora-v6';
+const CACHE = 'bitacora-v7';
 // jsPDF se precarga para poder generar el PDF sin señal
 const URLS = ['./bitacora-parcelas.html', './manifest.json', './icon-192.png', './icon-512.png', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'];
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCzunEf1FZhJpnSfu5wetHilEeovRSlJfwt2zuB6ZlPRz2IkBDuYNvTwk1p3rV_e_zHw/exec';
@@ -7,7 +7,8 @@ const SYNC_TAG = 'sync-bitacoras';
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE)
-      .then(function(c) { return c.addAll(URLS); })
+      // cache:'reload' evita guardar una copia vieja del cache HTTP del navegador
+      .then(function(c) { return c.addAll(URLS.map(function(u) { return new Request(u, { cache: 'reload' }); })); })
       .then(function() { return self.skipWaiting(); })
   );
 });
@@ -23,6 +24,23 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   // No cachear requests al Apps Script
   if (e.request.url.includes('script.google.com')) return;
+
+  // La pagina: primero red (siempre la version nueva con señal), si no hay señal, la guardada
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      // Con señal debil, a los 4 s se usa la copia guardada para no dejar esperando en campo
+      Promise.race([
+        fetch(e.request, { cache: 'no-store' }),
+        new Promise(function(_, rej) { setTimeout(function() { rej(new Error('timeout')); }, 4000); })
+      ]).then(function(nr) {
+        if (nr.ok && e.request.url.indexOf('bitacora-parcelas.html') > -1) { var c = nr.clone(); caches.open(CACHE).then(function(ca) { ca.put('./bitacora-parcelas.html', c); }); }
+        return nr;
+      }).catch(function() {
+        return caches.match('./bitacora-parcelas.html');
+      })
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(e.request).then(function(r) {
